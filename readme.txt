@@ -3,6 +3,12 @@ PACKAGE DOCUMENTATION
 package tuid
     import "github.com/tanglebones/tuid"
 
+    Package tuid implements a time prefixed 20 byte uuid. Time prefixed uids
+    have an advantage over random uuids when used in systems as idenitifiers
+    for entities that are indexed for look up. Because the time prefix
+    groups entities created near each other in time the updates to the
+    indexed will cluster into a set of 'hot' nodes reducing the number of
+    touched nodes in the index.
 
 
 VARIABLES

@@ -2,15 +2,12 @@
 // Use of this source code is governed by the MIT license
 // that can be found in the LICENSE file.
 
-/*
-Package tuid implements a time prefixed 20 byte uuid. Time prefixed
-uuids have an advantage over random uuids when used in systems as
-idenitifiers for entities that are indexed for look up. Because the
-time prefix groups entities created near each other in time the
-updates to the indexed will cluster into a set of 'hot' nodes
-reducing the number of touched nodes in the index.
-*/
-
+// Package tuid implements a time prefixed 20 byte uuid. Time prefixed
+// uids have an advantage over random uuids when used in systems as
+// idenitifiers for entities that are indexed for look up. Because the
+// time prefix groups entities created near each other in time the
+// updates to the indexed will cluster into a set of 'hot' nodes
+// reducing the number of touched nodes in the index.
 package tuid
 
 import (
