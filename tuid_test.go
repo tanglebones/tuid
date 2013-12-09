@@ -2,14 +2,15 @@ package tuid
 
 import (
   `testing`
-  `time`
 )
+
+var tp TuidProvider = NewTuidProvider(DefaultResolver)
 
 func TestEquals(t *testing.T) {
   if !Zero.Equals(Zero) {
     t.Errorf(`Zero != Zero`)
   }
-  a := New()
+  a := tp.New()
   if !a.Equals(a) {
     as := a.String()
     t.Errorf(`%v != %v`, as, as)
@@ -18,7 +19,7 @@ func TestEquals(t *testing.T) {
 
 func TestZero(t *testing.T) {
   zs := Zero.String()
-  ns := New().String()
+  ns := tp.New().String()
   t.Logf(`zero is: %v `, zs)
   t.Logf(`new is: %v`, ns)
   const expectedLen = 32
@@ -26,15 +27,15 @@ func TestZero(t *testing.T) {
     t.Errorf(`tuid.Zero is not length %v`, expectedLen)
   }
   if len(ns) != expectedLen {
-    t.Errorf(`tuid.New() is not length %v`, expectedLen)
+    t.Errorf(`tuid from New() is not length %v`, expectedLen)
   }
   if ns == zs {
-    t.Errorf(`tuid.New() == tuid.Zero`)
+    t.Errorf(`tuid from New() == tuid.Zero`)
   }
 }
 
 func TestParse(t *testing.T) {
-  a := New()
+  a := tp.New()
   as := a.String()
   b, err := Parse(as)
   a.dump(t)
@@ -51,10 +52,24 @@ func (tuid Tuid) dump(t *testing.T) {
   t.Logf(`%#v`, tuid)
 }
 
+type mockTimeProvider struct{}
+type mockTuidResolver struct{}
+
+var mockTime uint32 = 0
+
+func (_ mockTimeProvider) Seconds() uint32 {
+  mockTime++
+  return mockTime
+}
+
+func (_ mockTuidResolver) TimeProvider() TimeProvider {
+  return mockTimeProvider{}
+}
+
 func TestTuidsAreIncreasingOverTime(t *testing.T) {
-  a := New()
-  time.Sleep(1100 * time.Millisecond)
-  b := New()
+  mtp := NewTuidProvider(mockTuidResolver{})
+  a := mtp.New()
+  b := mtp.New()
   a.dump(t)
   b.dump(t)
   if a.After(b) {
@@ -76,7 +91,7 @@ func TestTuidsAreDifferent(t *testing.T) {
   prev := Zero
 
   for howMany := 100; howMany >= 0; howMany -= 1 {
-    tuid := New()
+    tuid := tp.New()
     if _, exists := tuids[tuid]; exists {
       t.Errorf(`tuid duplicate found.`)
     }
@@ -85,5 +100,34 @@ func TestTuidsAreDifferent(t *testing.T) {
       t.Errorf(`newer tuid %#v has t less previous tuid %#v`, tuid, prev)
     }
     prev = tuid
+  }
+}
+
+func TestInterferencePatterns(t *testing.T) {
+  allOnes := byte(0xFF)
+  altOdd := byte(0x55)  // 01010101b
+  altEven := byte(0xAA) // 10101010b
+
+  for _, src := range []byte{allOnes, altOdd, altEven} {
+    bytes := make([]byte, 20)
+    for i := 0; i < 20; i++ {
+      bytes[i] = src
+    }
+    t1, err1 := FromBytes(bytes)
+    s1 := t1.String()
+    t2, err2 := Parse(s1)
+    s2 := t2.String()
+    t1.dump(t)
+    t2.dump(t)
+    t.Logf(`%v %v`, s1, s2)
+    if s1 != s2 {
+      t.Errorf(`Encoding failed`)
+    }
+    if err1 != nil {
+      t.Errorf(`err1 = %v`, err1)
+    }
+    if err2 != nil {
+      t.Errorf(`err2 = %v`, err1)
+    }
   }
 }

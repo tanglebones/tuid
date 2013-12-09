@@ -1,23 +1,27 @@
 package tuid_test
 
 import (
-  `github.com/tanglebones/tuid`
   `fmt`
+  `github.com/tanglebones/tuid`
 )
 
-func ExampleNew() {
-  ta := tuid.New()
-  tb := tuid.New() // will be different than ta but have a similar prefix when converted to string
+func ExampleTuidProvider() {
+  tp := tuid.NewTuidProvider(tuid.DefaultResolver)
+  ta := tp.New()
+  tb := tp.New() // will be different than ta but have a similar prefix when converted to string
   fmt.Printf("%v %v\n", ta, tb)
 }
 
-func ExampleZero() {
+func Example_zero() {
   ta := tuid.Zero // placeholder tuid
-  fmt.Printf("%v\n", ta)
+  fmt.Printf("%v", ta)
+  // Output:
+  // AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 }
 
 func ExampleParse() {
-  tas := tuid.New().String()
+  tp := tuid.NewTuidProvider(tuid.DefaultResolver)
+  tas := tp.New().String()
   ta, err := tuid.Parse(tas)
   if err != nil {
     fmt.Printf("%v parsed to %v", tas, ta)

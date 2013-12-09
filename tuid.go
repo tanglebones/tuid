@@ -18,6 +18,55 @@ import (
   `time`
 )
 
+// TimeProvider interface for getting Seconds from epoc from an external source
+type TimeProvider interface {
+  Seconds() uint32
+}
+
+type defaultTimeProvider struct{}
+
+// A DefaultTimeProvider that uses the built in time package to determine seconds
+// from january 1, 2000 00:00:00 GMT (arbitrarily chosen epoc)
+var DefaultTimeProvider defaultTimeProvider = defaultTimeProvider{}
+
+var epoc = time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC).Unix()
+
+func (_ defaultTimeProvider) Seconds() uint32 {
+  return uint32(time.Now().UTC().Unix() - epoc)
+}
+
+// Resolver is used resolve get all the dependencies needed for TuidProvider
+// note: no dependency on randomness is given, the use of crypto/rand is forced
+// because the naturn of uid generation is tightly coupled to randomness
+type Resolver interface {
+  TimeProvider() TimeProvider
+}
+
+type defaultResolver struct{}
+
+// A DefaultResolver is provided because all of the dependencies can be resolved
+// using built in system defaults
+var DefaultResolver defaultResolver = defaultResolver{}
+
+func (_ defaultResolver) TimeProvider() TimeProvider {
+  return DefaultTimeProvider
+}
+
+// TuidProvider is used to create tuids
+type TuidProvider interface {
+  New() Tuid
+}
+
+type tuidProvider struct {
+  timeProvider TimeProvider
+}
+
+// Constuctor for creating a TuidProvider given a Resolver to resolve the dependencies
+// needed.
+func NewTuidProvider(resolver Resolver) TuidProvider {
+  return tuidProvider{timeProvider: resolver.TimeProvider()}
+}
+
 type Tuid struct {
   t   uint32
   msb uint64
@@ -36,11 +85,10 @@ func randUint64() uint64 {
 // Zero is a reference tuid for use similar to nil or null and meant to be used to indicate a no-value state
 var Zero = Tuid{}
 
-var epoc = time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC).Unix()
-
-// New returns a new tuid that is statsically unique and will compare as After other guids created more than 1 second previously
-func New() Tuid {
-  return Tuid{t: uint32(time.Now().UTC().Unix() - epoc), msb: randUint64(), lsb: randUint64()}
+// New returns a new tuid that is statsically unique and will compare as After other guids created more than 1
+// second previously as based on the time returned by the TimeProvider dependency
+func (tp tuidProvider) New() Tuid {
+  return Tuid{t: tp.timeProvider.Seconds(), msb: randUint64(), lsb: randUint64()}
 }
 
 // FromBytes converts an array of 20 bytes into a tuid or returns an error if the array is not exactly 20 bytes in length
