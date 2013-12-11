@@ -11,7 +11,6 @@
 package tuid
 
 import (
-  `crypto/rand`
   `encoding/base32`
   `encoding/binary`
   `errors`
@@ -71,17 +70,6 @@ type Tuid struct {
   t   uint32
   msb uint64
   lsb uint64
-}
-
-func randUint64() uint64 {
-  b := make([]byte, 8)
-  _, err := rand.Read(b)
-  if err != nil {
-    // not covered because making rand.Read fail would be difficult
-    // wrapping crypt/rand in an externalized interface would just move the problem there.
-    panic(err) 
-  }
-  return binary.BigEndian.Uint64(b)
 }
 
 // Zero is a reference tuid for use similar to nil or null and meant to be used to indicate a no-value state

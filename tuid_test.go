@@ -148,3 +148,56 @@ func TestInterferencePatterns(t *testing.T) {
     }
   }
 }
+
+func TestBeforeAfterEqualForAllPaths(t *testing.T) {
+  ts := []Tuid{
+    Tuid{t:0,msb:0,lsb:0},
+    Tuid{t:0,msb:0,lsb:1},
+    Tuid{t:0,msb:1,lsb:0},
+    Tuid{t:0,msb:1,lsb:1},
+    Tuid{t:1,msb:0,lsb:0},
+    Tuid{t:1,msb:0,lsb:1},
+    Tuid{t:1,msb:1,lsb:0},
+    Tuid{t:1,msb:1,lsb:1} }
+
+  for ai, a := range ts {
+    for bi, b := range ts {
+      t.Logf(`comparing %v to %v`, ai, bi)
+      if ai < bi {
+        if a.After(b) {
+          t.Errorf(`%v after %v`, ai, bi)
+        }
+        if b.Before(a) {
+          t.Errorf(`%v before %v`, bi, ai)
+        }
+        if !a.Before(b) {
+          t.Errorf(`%v not before %v`, ai, bi)
+        }
+        if !b.After(a) {
+          t.Errorf(`%v not after %v`, bi, ai)
+        }
+      } else if ai > bi {
+        if a.Before(b) {
+          t.Errorf(`%v before %v`, ai, bi)
+        }
+        if b.After(a) {
+          t.Errorf(`%v after %v`, bi, ai)
+        }
+        if !a.After(b) {
+          t.Errorf(`%v not after %v`, ai, bi)
+        }
+        if !b.Before(a) {
+          t.Errorf(`%v not before %v`, bi, ai)
+        }
+      } else {
+        if !a.Equals(b) {
+          t.Errorf(`%v did not equal %v`, ai, bi)
+        }
+        if !b.Equals(a) {
+          t.Errorf(`%v did not equal %v`, bi, ai)
+        }
+      }
+    }
+  }
+}
+
