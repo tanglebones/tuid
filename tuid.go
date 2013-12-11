@@ -77,7 +77,9 @@ func randUint64() uint64 {
   b := make([]byte, 8)
   _, err := rand.Read(b)
   if err != nil {
-    panic(err)
+    // not covered because making rand.Read fail would be difficult
+    // wrapping crypt/rand in an externalized interface would just move the problem there.
+    panic(err) 
   }
   return binary.BigEndian.Uint64(b)
 }

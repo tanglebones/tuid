@@ -46,6 +46,23 @@ func TestParse(t *testing.T) {
   if !a.Equals(b) {
     t.Errorf(`tuid %v != %v`, as, b.String())
   }
+  _, err = Parse("invalid tuid")
+  if err == nil {
+    t.Errorf(`expected Prase to fail on invalid input`)
+  }
+}
+
+func TestBytesFailure(t *testing.T) {
+  bytes19 := make([]byte,19)
+  _, err := FromBytes(bytes19)
+  if err == nil {
+    t.Errorf(`expected FromBytes() to fail when given 19 bytes`)
+  }
+  bytes21 := make([]byte,21)
+  _, err = FromBytes(bytes21)
+  if err == nil {
+    t.Errorf(`expected FromBytes() to fail when given 21 bytes`)
+  }
 }
 
 func (tuid Tuid) dump(t *testing.T) {
